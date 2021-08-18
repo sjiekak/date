@@ -70,7 +70,7 @@ func parseISORegexp(value string) (Date, error) {
 }
 
 func parseError(input string) error {
-	return fmt.Errorf("Date.ParseISO: length parse %s", input)
+	return fmt.Errorf("Date.ParseISO: cannot parse %s", input)
 }
 
 func parseISORune(value string) (Date, error) {
@@ -89,26 +89,26 @@ func parseISORune(value string) (Date, error) {
 			}
 			continue
 		}
-
 		if state >= 3 {
 			if c != 'T' {
 				return Date{}, parseError(value)
 			}
 			break
 		}
-
 		if unicode.IsDigit(c) {
 			data[state] = data[state]*10 + int(c-'0')
 			characters++
-		} else if c == '-' {
+			continue
+		}
+		if c == '-' {
 			if (state == 0 && characters < 4) || (state != 0 && characters != 2) {
 				return Date{}, parseError(value)
 			}
 			state++
 			characters = 0
-		} else {
-			return Date{}, parseError(value)
+			continue
 		}
+		return Date{}, parseError(value)
 	}
 
 	t := time.Date(yearsign*data[0], time.Month(data[1]), data[2], 0, 0, 0, 0, time.UTC)
