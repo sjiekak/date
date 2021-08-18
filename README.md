@@ -15,7 +15,11 @@ full documentation and examples.
 
 ## Installation
 
-    go get -u github.com/fxtlabs/date
+    go get -u github.com/sjiekak/date
+
+## Fork Motivation
+
+The motivation of this fork is to increase the performance of the ISO 8601 string formatting.
 
 ## Credits
 
