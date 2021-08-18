@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fxtlabs/date"
+	"github.com/sjiekak/date"
 )
 
 func same(d date.Date, t time.Time) bool {

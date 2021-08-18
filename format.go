@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"unicode"
 )
 
 // These are predefined layouts for use in Date.Format and Date.Parse.
@@ -49,6 +50,10 @@ var reISO8601 = regexp.MustCompile(`^([-+]?\d{4,})-(\d{2})-(\d{2})$`)
 // is currently not able to parse ISO 8601 formatted strings that use the
 // expanded year format.
 func ParseISO(value string) (Date, error) {
+	return parseISORune(value)
+}
+
+func parseISORegexp(value string) (Date, error) {
 	m := reISO8601.FindStringSubmatch(value)
 	if len(m) != 4 {
 		return Date{}, fmt.Errorf("Date.ParseISO: cannot parse %s", value)
@@ -61,6 +66,52 @@ func ParseISO(value string) (Date, error) {
 
 	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 
+	return Date{encode(t)}, nil
+}
+
+func parseError(input string) error {
+	return fmt.Errorf("Date.ParseISO: length parse %s", input)
+}
+
+func parseISORune(value string) (Date, error) {
+	if len(value) < 10 {
+		return Date{}, parseError(value)
+	}
+
+	data := []int{0, 0, 0}
+	yearsign := 1
+	state := 0
+	characters := 0
+	for i, c := range value {
+		if i == 0 && (c == '+' || c == '-') {
+			if c == '-' {
+				yearsign = -1
+			}
+			continue
+		}
+
+		if state >= 3 {
+			if c != 'T' {
+				return Date{}, parseError(value)
+			}
+			break
+		}
+
+		if unicode.IsDigit(c) {
+			data[state] = data[state]*10 + int(c-'0')
+			characters++
+		} else if c == '-' {
+			if (state == 0 && characters < 4) || (state != 0 && characters != 2) {
+				return Date{}, parseError(value)
+			}
+			state++
+			characters = 0
+		} else {
+			return Date{}, parseError(value)
+		}
+	}
+
+	t := time.Date(yearsign*data[0], time.Month(data[1]), data[2], 0, 0, 0, 0, time.UTC)
 	return Date{encode(t)}, nil
 }
 
